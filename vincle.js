@@ -1,4 +1,36 @@
-var VincluLed = function( frequencyL , frequencyR ){
+/**
+ * [VincluLed ウィンクル操作用クラス]
+ */
+var VincluLed = function(frequencyL , frequencyR){
+    /**
+     * [self 自身への参照]
+     * @type {[Vincle]}
+     */
+    var self = this;
+
+    /**
+     * [isDebugMode デバッグモード切り替え]
+     * @type {Boolean}
+     */
+    this.isDebugMode = true;
+
+    /**
+     * [debug デバッグ　デバッグモードがTrueの場合のみ使用可能]
+     * @return {[type]} [description]
+     */
+    this.debug = function() {
+        if (!self.isDebugMode) {
+            return;
+        }
+        if (typeof console === 'object' && 'log' in window.console) {
+            try {
+                return window.console.log(arguments);
+            } catch (e) {
+                var args = Array.prototype.slice.apply(arguments);
+                return window.console.log(args.join(' '));
+            }
+        }
+    }
 
     /**
      * [isOn 点灯中か]
@@ -45,7 +77,7 @@ var VincluLed = function( frequencyL , frequencyR ){
      */
     this.init = function(){
         this.audio_context = new webkitAudioContext();
-    //44100 は変更しない事
+        //44100 は変更しない事
         this.audio_context.samplingRate = 44100;
     };
 
@@ -89,7 +121,7 @@ var VincluLed = function( frequencyL , frequencyR ){
      * @return {[void]}
      */
     this.on = function(){
-        console.log('on');
+        self.debug('on');
         this.isOn = true;   
 
         //バッファーを設定
@@ -107,7 +139,7 @@ var VincluLed = function( frequencyL , frequencyR ){
      */
     this.off = function( ){
         if( this.isOn ){
-            console.log('off');
+            self.debug('off');
             this.isOn = false;
             this.audio_node.noteOff(0);
             this.audio_node = null;
