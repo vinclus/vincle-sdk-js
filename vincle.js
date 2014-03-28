@@ -1,12 +1,18 @@
 /**
  * [VincluLed ウィンクル操作用クラス]
  */
-var VincluLed = function(frequencyL , frequencyR){
+var VincluLed = function(_frequencyL , _frequencyR){
     /**
      * [self 自身への参照]
      * @type {[Vincle]}
      */
     var self = this;
+
+    this.const = {
+        'ON' : 'on',
+        'OFF' : 'off',
+        'BLINK' : 'blink'
+    }
 
     /**
      * [isDebugMode デバッグモード切り替え]
@@ -33,6 +39,45 @@ var VincluLed = function(frequencyL , frequencyR){
     }
 
     /**
+     * [frequencyL privete 点灯頻度L]
+     * @type {Number}
+     */
+    var frequencyL = 0;
+    /**
+     * [getFrequencyL 点灯頻度Lゲッター]
+     * @return {[Integer]} [点灯頻度L]
+     */
+    this.getFrequencyL = function() {
+        return frequencyL;
+    }
+    /**
+     * [setFrequencyL 点灯頻度Lセッター]
+     * @param {[Integer]} _frequencyL [点灯頻度L]
+     */
+    this.setFrequencyL = function(_frequencyL) {
+        frequencyL = _frequencyL;
+    }
+    /**
+     * [frequencyL privete 点灯頻度L]
+     * @type {Number}
+     */
+    var frequencyR = 0;
+    /**
+     * [getFrequencyR 点灯頻度Rゲッター]
+     * @return {[Integer]} [点灯頻度R]
+     */
+    this.getFrequencyR = function() {
+        return frequencyR;
+    }
+    /**
+     * [setFrequencyR 点灯頻度Rセッター]
+     * @param {[Integer]} _frequencyR [点灯頻度R]
+     */
+    this.setFrequencyR = function(_frequencyR) {
+        frequencyR = _frequencyR;
+    }
+
+    /**
      * [isOn 点灯中か]
      * @type {Boolean}
      */
@@ -48,16 +93,6 @@ var VincluLed = function(frequencyL , frequencyR){
      */
     this.audio_node = null;
 
-    /**
-     * 点滅頻度L
-     * @type {[Integer]}
-     */
-    this.frequencyL = frequencyL;
-    /**
-     * 点滅頻度R
-     * @type {[Integer]}
-     */
-    this.frequencyR = frequencyR;
 
     /**
      * [gain_node デスティネーション接続ノード]
@@ -71,15 +106,6 @@ var VincluLed = function(frequencyL , frequencyR){
      */
     this.isBlink = false;
 
-    /**
-     * [init 初期化処理]
-     * @return {[void]}
-     */
-    this.init = function(){
-        this.audio_context = new webkitAudioContext();
-        //44100 は変更しない事
-        this.audio_context.samplingRate = 44100;
-    };
 
     /**
      * [createAudioDataBuffer 再生する音のバッファーを作成する]
@@ -94,8 +120,8 @@ var VincluLed = function(frequencyL , frequencyR){
         var audioDataL = buffer.getChannelData(0);
         var audioDataR = buffer.getChannelData(1);
         for(var i = 0; i < audioDataL.length; i++){
-            var l = Math.sin(2 * Math.PI * frequencyL * i / context.samplingRate);
-            var r = Math.sin(2 * Math.PI * frequencyR * i / context.samplingRate);
+            var l = Math.sin(2 * Math.PI * self.getFrequencyL() * i / context.samplingRate);
+            var r = Math.sin(2 * Math.PI * self.getFrequencyR() * i / context.samplingRate);
             audioDataL[i] = l;
             audioDataR[i] = r*-1;
         }
@@ -122,14 +148,18 @@ var VincluLed = function(frequencyL , frequencyR){
      */
     this.on = function(){
         self.debug('on');
-	if(( this.isOn )||(this.audio_node != null)){
-	   return;
+        if(( this.isOn )||(this.audio_node != null)){
+            return;
         }
-	this.isOn = true;   
+        this.isOn = true;   
 
         //バッファーを設定
         this.audio_node = this.audio_context.createBufferSource();
-        this.audio_node.buffer = this.createAudioDataBuffer(this.audio_context,this.frequencyL,this.frequencyR);
+        this.audio_node.buffer = this.createAudioDataBuffer(
+            this.audio_context,
+            self.getFrequencyL(),
+            self.getFrequencyR()
+        );
         this.audio_node.loop = true;
         this.audio_node.connect(this.audio_context.destination);
 
@@ -177,13 +207,26 @@ var VincluLed = function(frequencyL , frequencyR){
      * @return {[void]}
      */
     this.blinkOff = function(){
-	if(this.blinkTimer == null) return;
+    if(this.blinkTimer == null) return;
         //LED 消灯
         clearInterval(this.blinkTimer);
-	this.blinkTimer = null;
+        this.blinkTimer = null;
         this.isBlink = false;
         this.off();
     }
 
-    this.init();
+    /**
+     * [init 初期化処理]
+     * @return {[void]}
+     */
+    this.init = function(_frequencyL, _frequencyR){
+        self.debug(_frequencyL, _frequencyR)
+        self.setFrequencyL(_frequencyL);
+        self.setFrequencyR(_frequencyR);
+        this.audio_context = new webkitAudioContext();
+        //44100 は変更しない事
+        this.audio_context.samplingRate = 44100;
+    };
+
+    this.init(_frequencyL,_frequencyR);
 };
