@@ -8,6 +8,10 @@ var VincluLed = function(_frequencyL , _frequencyR){
      */
     var self = this;
 
+    /**
+     * [const 定数群]
+     * @type {Object}
+     */
     this.const = {
         'ON' : 'on',
         'OFF' : 'off',
@@ -217,7 +221,9 @@ var VincluLed = function(_frequencyL , _frequencyR){
 
     /**
      * [init 初期化処理]
-     * @return {[void]}
+     * @param  {[Integer]} _frequencyL [点滅頻度L]
+     * @param  {[Integer]} _frequencyR [点滅頻度R]
+     * @return {[void]}             
      */
     this.init = function(_frequencyL, _frequencyR){
         self.debug(_frequencyL, _frequencyR)
