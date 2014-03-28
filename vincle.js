@@ -122,7 +122,10 @@ var VincluLed = function(frequencyL , frequencyR){
      */
     this.on = function(){
         self.debug('on');
-        this.isOn = true;   
+	if(( this.isOn )||(this.audio_node != null)){
+	   return;
+        }
+	this.isOn = true;   
 
         //バッファーを設定
         this.audio_node = this.audio_context.createBufferSource();
@@ -153,7 +156,7 @@ var VincluLed = function(frequencyL , frequencyR){
      * @return {[void]}
      */
     this.blinkOn = function( interval ){
-        if(this.isBlink == false){
+        if((this.isBlink == false) && (this.blinkTimer == null)){
             this.isBlink = true;
             //LED 点灯
             this.on();
@@ -174,9 +177,11 @@ var VincluLed = function(frequencyL , frequencyR){
      * @return {[void]}
      */
     this.blinkOff = function(){
+	if(this.blinkTimer == null) return;
         //LED 消灯
-        this.isBlink = false;
         clearInterval(this.blinkTimer);
+	this.blinkTimer = null;
+        this.isBlink = false;
         this.off();
     }
 
