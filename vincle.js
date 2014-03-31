@@ -42,6 +42,15 @@ var VincluLed = function(_frequencyL , _frequencyR){
         }
     }
 
+    this.debug.status = function(){
+        self.debug({
+            'frequencyL':self.getFrequencyL(),
+            'frequencyR':self.getFrequencyR(),
+            'isLightOn':self.isLightOn(),
+            'status':self.getStatus()
+        });
+    }
+
     /**
      * [frequencyL privete 点灯頻度L]
      * @type {Number}
@@ -60,6 +69,9 @@ var VincluLed = function(_frequencyL , _frequencyR){
      */
     this.setFrequencyL = function(_frequencyL) {
         frequencyL = _frequencyL;
+        if (self.isLightOn()) {
+            self.createAudioNode();
+        };
     }
     /**
      * [frequencyL privete 点灯頻度L]
@@ -79,13 +91,45 @@ var VincluLed = function(_frequencyL , _frequencyR){
      */
     this.setFrequencyR = function(_frequencyR) {
         frequencyR = _frequencyR;
+        if (self.isLightOn()) {
+            self.createAudioNode();
+        };
     }
 
     /**
-     * [isOn 点灯中か]
-     * @type {Boolean}
+     * [status privete 点灯状態]
+     * @type {String}
      */
-    this.isOn = false;
+    var status = self.const.OFF;
+    /**
+     * [getStatus 状態ゲッター]
+     * @return {[String]} [状態]
+     */
+    this.getStatus = function() {
+        return status;
+    }
+    /**
+     * [setStatus 状態セッター]
+     * @param {[String]} _status [状態]
+     */
+    this.setStatus = function(_status) {
+        if (typeof _status !== 'string') {return;};
+        self.debug('set status : '+_status);
+        status = _status;
+    }
+    /**
+     * [isLightOn 点灯中かどうか]
+     * @return {Boolean} [点灯:true 消灯：false]
+     */
+    this.isLightOn = function(){
+        if (self.getStatus() === self.const.ON) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
     /**
      * [audio_context オーディオコンテキスト]
      * @type {[webkitAudioContext]}
@@ -118,7 +162,8 @@ var VincluLed = function(_frequencyL , _frequencyR){
      * @param  {[Integer]} frequencyR 点滅頻度R
      * @return {[AudioBuffer]}
      */
-    this.createAudioDataBuffer = function(context,frequencyL,frequencyR){
+    this.createAudioDataBuffer = function(){
+        var context = self.audio_context;
         var s = context.samplingRate * 2;
         var buffer = context.createBuffer(2, s, context.samplingRate);
         var audioDataL = buffer.getChannelData(0);
@@ -134,8 +179,7 @@ var VincluLed = function(_frequencyL , _frequencyR){
 
     /**
      * [setBrightness 明るさ調整]
-     * @param {[Integer]} volume 
-     * 
+     * @param {[Integer]} volume
      */
     this.setBrightness = function(volume){
         if(this.gain_node == null){
@@ -152,22 +196,13 @@ var VincluLed = function(_frequencyL , _frequencyR){
      */
     this.on = function(){
         self.debug('on');
-        if(( this.isOn )||(this.audio_node != null)){
+        if(self.getStatus() == self.const.ON){
             return;
         }
-        this.isOn = true;   
 
-        //バッファーを設定
-        this.audio_node = this.audio_context.createBufferSource();
-        this.audio_node.buffer = this.createAudioDataBuffer(
-            this.audio_context,
-            self.getFrequencyL(),
-            self.getFrequencyR()
-        );
-        this.audio_node.loop = true;
-        this.audio_node.connect(this.audio_context.destination);
+        self.setStatus(self.const.ON);
 
-        this.audio_node.noteOn(0);
+        self.createAudioNode();
     };
 
     /**
@@ -175,14 +210,41 @@ var VincluLed = function(_frequencyL , _frequencyR){
      * @return {[void]}
      */
     this.off = function( ){
-        if( this.isOn ){
+        if(self.getStatus() == self.const.ON){
             self.debug('off');
-            this.isOn = false;
-            this.audio_node.noteOff(0);
-            this.audio_node = null;
-            this.gain_node = null;
+            self.setStatus(self.const.OFF);
+            self.destroyAudioNode();
         }
     };
+
+    /**
+     * [createAudioNode オーディオノードを再作成]
+     * @return {[void]}
+     */
+    this.createAudioNode = function(){
+        // 既存のオーディオノードを破棄
+        self.destroyAudioNode();
+        //バッファーを設定
+        self.audio_node = self.audio_context.createBufferSource();
+        self.audio_node.buffer = self.createAudioDataBuffer(
+            self.audio_context,
+            self.getFrequencyL(),
+            self.getFrequencyR()
+        );
+        self.audio_node.loop = true;
+        self.audio_node.connect(self.audio_context.destination);
+        self.audio_node.noteOn(0);
+    }
+
+    /**
+     * [createAudioNode オーディオノードを破棄]
+     * @return {[void]}
+     */
+    this.destroyAudioNode = function(){
+        self.audio_node.noteOff(0);
+        self.audio_node = null;
+        self.gain_node = null;
+    }
 
     /**
      * [blinkOn LEDの点滅開始]
@@ -223,13 +285,14 @@ var VincluLed = function(_frequencyL , _frequencyR){
      * [init 初期化処理]
      * @param  {[Integer]} _frequencyL [点滅頻度L]
      * @param  {[Integer]} _frequencyR [点滅頻度R]
-     * @return {[void]}             
+     * @return {[void]}
      */
     this.init = function(_frequencyL, _frequencyR){
         self.debug(_frequencyL, _frequencyR)
         self.setFrequencyL(_frequencyL);
         self.setFrequencyR(_frequencyR);
-        this.audio_context = new webkitAudioContext();
+        var aCon = window.AudioContext || window.webkitAudioContext || window.mozAudioContext || window.msAudioContext;
+        this.audio_context = new aCon();
         //44100 は変更しない事
         this.audio_context.samplingRate = 44100;
     };
