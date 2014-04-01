@@ -176,7 +176,13 @@ var VincluLed = function(_frequencyL , _frequencyR){
         }
         return buffer;
     };
-
+    
+    /**
+     * [getBrightness 明るさ取得（明るさ＝音量）]
+     */
+    this.getBrightness = function(){
+        return this.gain_node.gain.value;
+    }
     /**
      * [setBrightness 明るさ調整]
      * @param {[Integer]} volume
@@ -201,7 +207,6 @@ var VincluLed = function(_frequencyL , _frequencyR){
         }
 
         self.setStatus(self.const.ON);
-
         self.createAudioNode();
     };
 
