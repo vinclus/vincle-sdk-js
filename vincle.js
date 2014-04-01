@@ -42,6 +42,9 @@ var VincluLed = function(_frequencyL , _frequencyR){
         }
     }
 
+    /**
+     * [debug.status 状態確認]
+     */
     this.debug.status = function(){
         self.debug({
             'frequencyL':self.getFrequencyL(),
@@ -201,11 +204,10 @@ var VincluLed = function(_frequencyL , _frequencyR){
      * @return {[void]}
      */
     this.on = function(){
-        self.debug('on');
         if(self.getStatus() == self.const.ON){
             return;
         }
-
+        self.debug('on');
         self.setStatus(self.const.ON);
         self.createAudioNode();
     };
@@ -215,11 +217,12 @@ var VincluLed = function(_frequencyL , _frequencyR){
      * @return {[void]}
      */
     this.off = function( ){
-        if(self.getStatus() == self.const.ON){
-            self.debug('off');
-            self.setStatus(self.const.OFF);
-            self.destroyAudioNode();
+        if(self.getStatus() != self.const.ON){
+            return;
         }
+        self.debug('off');
+        self.setStatus(self.const.OFF);
+        self.destroyAudioNode();
     };
 
     /**
