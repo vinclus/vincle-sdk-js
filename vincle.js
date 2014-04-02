@@ -299,10 +299,9 @@ var VincluLed = function(_frequencyL , _frequencyR){
         self.debug(_frequencyL, _frequencyR)
         self.setFrequencyL(_frequencyL);
         self.setFrequencyR(_frequencyR);
-        var aCon = window.AudioContext || window.webkitAudioContext || window.mozAudioContext || window.msAudioContext;
-        this.audio_context = new aCon();
+        self.audio_context = new (window.AudioContext || window.webkitAudioContext || window.mozAudioContext || window.msAudioContext);
         //44100 は変更しない事
-        this.audio_context.samplingRate = 44100;
+        self.audio_context.samplingRate = 44100;
     };
 
     this.init(_frequencyL,_frequencyR);
