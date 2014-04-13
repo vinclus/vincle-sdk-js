@@ -16,7 +16,7 @@ var VincluLed = function(_frequencyL , _frequencyR){
         'ON' : 'on',
         'OFF' : 'off',
         'BLINK' : 'blink'
-    }
+    };
 
     /**
      * [isDebugMode デバッグモード切り替え]
@@ -40,7 +40,7 @@ var VincluLed = function(_frequencyL , _frequencyR){
                 return window.console.log(args.join(' '));
             }
         }
-    }
+    };
 
     this.debug.status = function(){
         self.debug({
@@ -49,7 +49,7 @@ var VincluLed = function(_frequencyL , _frequencyR){
             'isLightOn':self.isLightOn(),
             'status':self.getStatus()
         });
-    }
+    };
 
     /**
      * [frequencyL privete 点灯頻度L]
@@ -62,7 +62,7 @@ var VincluLed = function(_frequencyL , _frequencyR){
      */
     this.getFrequencyL = function() {
         return frequencyL;
-    }
+    };
     /**
      * [setFrequencyL 点灯頻度Lセッター]
      * @param {[Integer]} _frequencyL [点灯頻度L]
@@ -71,8 +71,8 @@ var VincluLed = function(_frequencyL , _frequencyR){
         frequencyL = _frequencyL;
         if (self.isLightOn()) {
             self.createAudioNode();
-        };
-    }
+        }
+    };
     /**
      * [frequencyL privete 点灯頻度L]
      * @type {Number}
@@ -84,7 +84,7 @@ var VincluLed = function(_frequencyL , _frequencyR){
      */
     this.getFrequencyR = function() {
         return frequencyR;
-    }
+    };
     /**
      * [setFrequencyR 点灯頻度Rセッター]
      * @param {[Integer]} _frequencyR [点灯頻度R]
@@ -93,8 +93,8 @@ var VincluLed = function(_frequencyL , _frequencyR){
         frequencyR = _frequencyR;
         if (self.isLightOn()) {
             self.createAudioNode();
-        };
-    }
+        }
+    };
 
     /**
      * [status privete 点灯状態]
@@ -107,16 +107,18 @@ var VincluLed = function(_frequencyL , _frequencyR){
      */
     this.getStatus = function() {
         return status;
-    }
+    };
     /**
      * [setStatus 状態セッター]
      * @param {[String]} _status [状態]
      */
     this.setStatus = function(_status) {
-        if (typeof _status !== 'string') {return;};
+        if (typeof _status !== 'string') {
+          return;
+        }
         self.debug('set status : '+_status);
         status = _status;
-    }
+    };
     /**
      * [isLightOn 点灯中かどうか]
      * @return {Boolean} [点灯:true 消灯：false]
@@ -128,7 +130,7 @@ var VincluLed = function(_frequencyL , _frequencyR){
         else {
             return false;
         }
-    }
+    };
 
     /**
      * [audio_context オーディオコンテキスト]
@@ -174,14 +176,14 @@ var VincluLed = function(_frequencyL , _frequencyR){
      * @param {[Integer]} volume
      */
     this.setBrightness = function(volume){
-        if(self.gain_node == null){
+        if(self.gain_node === null){
             self.createAudioNode();
             self.gain_node = self.audio_context.createGainNode();
             self.audio_node.connect(self.gain_node);
             self.gain_node.connect(self.audio_context.destination);
         }
         self.gain_node.gain.value = volume;
-    }
+    };
 
     /**
      * [on LEDの電源をON]
@@ -226,7 +228,7 @@ var VincluLed = function(_frequencyL , _frequencyR){
         self.audio_node.loop = true;
         self.audio_node.connect(self.audio_context.destination);
         self.audio_node.noteOn(0);
-    }
+    };
 
     /**
      * [createAudioNode オーディオノードを破棄]
@@ -238,7 +240,7 @@ var VincluLed = function(_frequencyL , _frequencyR){
         }
         self.audio_node = null;
         self.gain_node = null;
-    }
+    };
 
     // fixme: エフェクト関連の基底クラスをつくるべきかも
 
@@ -271,7 +273,7 @@ var VincluLed = function(_frequencyL , _frequencyR){
                     that.off();
                     return;
                 }
-                setTimeout(function(e){
+                setTimeout(function(){
                     v -= i;
                     if(v <= -0.5) {
                         i = -0.1;
@@ -283,7 +285,7 @@ var VincluLed = function(_frequencyL , _frequencyR){
                     self.setBrightness(v);
                     _blink();
                 },that.interval);
-            }
+            };
             _blink();
         },
         /**
@@ -303,7 +305,7 @@ var VincluLed = function(_frequencyL , _frequencyR){
      * @return {[void]}
      */
     this.init = function(_frequencyL, _frequencyR){
-        self.debug(_frequencyL, _frequencyR)
+        self.debug(_frequencyL, _frequencyR);
         self.setFrequencyL(_frequencyL);
         self.setFrequencyR(_frequencyR);
         var aCon = window.AudioContext || window.webkitAudioContext || window.mozAudioContext || window.msAudioContext;
