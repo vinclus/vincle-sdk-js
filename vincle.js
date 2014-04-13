@@ -42,9 +42,6 @@ var VincluLed = function(_frequencyL , _frequencyR){
         }
     }
 
-    /**
-     * [debug.status 状態確認]
-     */
     this.debug.status = function(){
         self.debug({
             'frequencyL':self.getFrequencyL(),
@@ -143,19 +140,11 @@ var VincluLed = function(_frequencyL , _frequencyR){
      * @type {[AudioBufferSourceNode]}
      */
     this.audio_node = null;
-
-
     /**
      * [gain_node デスティネーション接続ノード]
      * @type {[GainNode]}
      */
     this.gain_node = null;
-
-    /**
-     * [isBlink 点滅中か]
-     * @type {Boolean}
-     */
-    this.isBlink = false;
 
 
     /**
@@ -179,24 +168,19 @@ var VincluLed = function(_frequencyL , _frequencyR){
         }
         return buffer;
     };
-    
-    /**
-     * [getBrightness 明るさ取得（明るさ＝音量）]
-     */
-    this.getBrightness = function(){
-        return this.gain_node.gain.value;
-    }
+
     /**
      * [setBrightness 明るさ調整]
      * @param {[Integer]} volume
      */
     this.setBrightness = function(volume){
-        if(this.gain_node == null){
-            this.gain_node = this.audio_context.createGainNode();
-            this.audio_node.connect(this.gain_node);
-            this.gain_node.connect(this.audio_context.destination);
+        if(self.gain_node == null){
+            self.createAudioNode();
+            self.gain_node = self.audio_context.createGainNode();
+            self.audio_node.connect(self.gain_node);
+            self.gain_node.connect(self.audio_context.destination);
         }
-        this.gain_node.gain.value = volume;
+        self.gain_node.gain.value = volume;
     }
 
     /**
@@ -204,10 +188,11 @@ var VincluLed = function(_frequencyL , _frequencyR){
      * @return {[void]}
      */
     this.on = function(){
+        self.debug('on');
         if(self.getStatus() == self.const.ON){
             return;
         }
-        self.debug('on');
+
         self.setStatus(self.const.ON);
         self.createAudioNode();
     };
@@ -217,12 +202,11 @@ var VincluLed = function(_frequencyL , _frequencyR){
      * @return {[void]}
      */
     this.off = function( ){
-        if(self.getStatus() != self.const.ON){
-            return;
+        if(self.getStatus() == self.const.ON){
+            self.debug('off');
+            self.setStatus(self.const.OFF);
+            self.destroyAudioNode();
         }
-        self.debug('off');
-        self.setStatus(self.const.OFF);
-        self.destroyAudioNode();
     };
 
     /**
@@ -249,45 +233,66 @@ var VincluLed = function(_frequencyL , _frequencyR){
      * @return {[void]}
      */
     this.destroyAudioNode = function(){
-        self.audio_node.noteOff(0);
+        if(self.audio_node){
+            self.audio_node.noteOff(0);
+        }
         self.audio_node = null;
         self.gain_node = null;
     }
 
-    /**
-     * [blinkOn LEDの点滅開始]
-     * @param  {[Integer]} interval 点灯間隔
-     * @return {[void]}
-     */
-    this.blinkOn = function( interval ){
-        if((this.isBlink == false) && (this.blinkTimer == null)){
-            this.isBlink = true;
-            //LED 点灯
-            this.on();
-            var v = 0,i= 0.1;
-            var fnc = function(){
-                v -= i;
-                if(v <= -0.5) i = -0.1;
-                else if(v >= 0.0) i = 0.1;
-                //明るさ調整
-                this.setBrightness(v);
-            };
-            this.blinkTimer = setInterval($.proxy(fnc,this),interval);
-        }
-    }
+    // fixme: エフェクト関連の基底クラスをつくるべきかも
 
     /**
-     * [blinkOn LEDの点滅終了]
-     * @return {[void]}
+     * [effect エフェクト]
+     * @type {Object}
      */
-    this.blinkOff = function(){
-    if(this.blinkTimer == null) return;
-        //LED 消灯
-        clearInterval(this.blinkTimer);
-        this.blinkTimer = null;
-        this.isBlink = false;
-        this.off();
-    }
+    this.effect = {};
+
+    /**
+     * [blink 点滅]
+     * @type {Object}
+     */
+    this.effect.blink = {
+        /**
+         * エフェクト実行間隔
+         */
+        'interval' : false,
+        /**
+         * [点滅実行]
+         */
+        'on' : function() {
+            var that = this;
+            var v = 0;
+            var i = 0.1;
+            var _blink = function(){
+                if (!self.isLightOn() || !that.interval) {
+                    that.off();
+                    return;
+                }
+                setTimeout(function(e){
+                    v -= i;
+                    if(v <= -0.5) {
+                        i = -0.1;
+                    }
+                    else if(v >= 0.0){
+                        i = 0.1;
+                    }
+                    //明るさ調整
+                    self.setBrightness(v);
+                    _blink();
+                },that.interval);
+            }
+            _blink();
+        },
+        /**
+         * [点滅終了]
+         */
+        'off' : function() {
+            this.interval = false;
+            // 明るさリセット
+            self.setBrightness(1);
+        }
+    };
 
     /**
      * [init 初期化処理]
@@ -299,7 +304,8 @@ var VincluLed = function(_frequencyL , _frequencyR){
         self.debug(_frequencyL, _frequencyR)
         self.setFrequencyL(_frequencyL);
         self.setFrequencyR(_frequencyR);
-        self.audio_context = new (window.AudioContext || window.webkitAudioContext || window.mozAudioContext || window.msAudioContext);
+        var aCon = window.AudioContext || window.webkitAudioContext || window.mozAudioContext || window.msAudioContext;
+        self.audio_context = new aCon();
         //44100 は変更しない事
         self.audio_context.samplingRate = 44100;
     };
