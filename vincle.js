@@ -260,10 +260,12 @@ var VincluLed = function(_frequencyL , _frequencyR){
         /**
          * [点滅実行]
          */
-        'on' : function() {
+        'on' : function(interval) {
             var that = this;
             var v = 0;
             var i = 0.1;
+
+            that.interval = interval;
             var _blink = function(){
                 if (!self.isLightOn() || !that.interval) {
                     that.off();
